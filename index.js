@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const req = require('express/lib/request');
+const res = require('express/lib/response');
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -20,10 +21,17 @@ async function run() {
         await client.connect();
         const partCollection = client.db('bicycle_parts').collection('parts');
         const orderCollection = client.db('bicycle_parts').collection('orders');
+        const userCollection = client.db('bicycle_parts').collection('users');
 
         // Auth
 
-        app.get('/login', async())
+        app.get('/login', async () => {
+            const user = req.body;
+            const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+                expiresIn: '1d'
+            });
+            res.send({ accessToken });
+        });
 
         // Parts
         app.get('/singleParts', async (req, res) => {
@@ -31,13 +39,26 @@ async function run() {
             const cursor = partCollection.find(query);
             const parts = await cursor.toArray();
             res.send(parts);
-        })
+        });
 
         app.get('/singleParts/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
             const singleParts = await partCollection.findOne(query);
             res.send(singleParts);
+        });
+
+        // put
+        app.put('/user/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = req.body;
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: user,
+            };
+            const result = await userCollection.updateOne(filter, updateDoc, options);
+            res.send(result);
         })
 
         // PoST
