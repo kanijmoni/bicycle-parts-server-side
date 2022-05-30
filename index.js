@@ -28,8 +28,23 @@ async function run() {
         app.get('/singleParts/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: ObjectId(id) };
-            const singleParts =await partCollection.findOne(query);
+            const singleParts = await partCollection.findOne(query);
             res.send(singleParts);
+        })
+
+        // PoST
+        app.post('/singleParts', async (req, res) => {
+            const newParts = req.body;
+            const result = await partCollection.insertOne(newParts);
+            res.send(result);
+        });
+
+        // DELETE
+        app.delete('/singleParts/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await partCollection.deleteOne(query);
+            res.send(result);
         })
 
     }
