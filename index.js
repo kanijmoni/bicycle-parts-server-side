@@ -1,7 +1,9 @@
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const req = require('express/lib/request');
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -17,7 +19,13 @@ async function run() {
     try {
         await client.connect();
         const partCollection = client.db('bicycle_parts').collection('parts');
+        const orderCollection = client.db('bicycle_parts').collection('orders');
 
+        // Auth
+
+        app.get('/login', async())
+
+        // Parts
         app.get('/singleParts', async (req, res) => {
             const query = {};
             const cursor = partCollection.find(query);
@@ -45,7 +53,24 @@ async function run() {
             const query = { _id: ObjectId(id) };
             const result = await partCollection.deleteOne(query);
             res.send(result);
+        });
+
+        // Order Collection
+
+        app.get('/order', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email };
+            const cursor = orderCollection.find(query);
+            const orders = await cursor.toArray();
+            res.send(orders);
         })
+
+        app.post('/order', async (req, res) => {
+            const order = req.body;
+            const result = await orderCollection.insertOne(order);
+            res.send(result);
+        })
+
 
     }
     finally {
